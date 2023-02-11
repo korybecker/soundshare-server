@@ -3,6 +3,9 @@
 	"version": "1.0.0",
 	"description": "express server template project",
 	"main": "app.js",
+	"engines": {
+		"node": "18.x"
+	},
 	"scripts": {
 		"start": "nodemon bin/run | bunyan -o short",
 		"build": "npm install"
