@@ -1,0 +1,24 @@
+#!/usr/bin/env node
+
+const http = require('http');
+
+require('dotenv').config();
+
+const config = require('../config')[process.env.NODE_ENV || 'development'];
+
+const connectDB = require('../db/db');
+
+const log = config.log();
+const app = require('../app')(config);
+
+const server = http.createServer(app);
+
+connectDB();
+
+server.listen(process.env.PORT || 3000);
+
+server.on('listening', () => {
+	log.info(
+		`Listening on port ${server.address().port} in ${app.get('env')} mode.`
+	);
+});
