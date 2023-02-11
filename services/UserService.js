@@ -37,10 +37,18 @@ class UserService {
     }
     async signupUser(req, res, next) {
         try {
-            const file = req.files.file;
+            let file = null;
+            if (req.files && req.files.file) {
+                file = req.files.file;
+            }
             const { email, name, username, password } = req.body;
 
-            const pfpUrl = await uploadToPfpBucket(file);
+            let pfpUrl;
+            if (file) {
+                pfpUrl = await uploadToPfpBucket(file);
+            } else {
+                pfpUrl = "";
+            }
 
             const welcome = `Welcome, ${name}!`;
             const newUser = await User.signup(

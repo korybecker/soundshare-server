@@ -23,6 +23,9 @@ const pfpS3 = new S3({
 });
 
 const uploadToPfpBucket = async (file) => {
+    if (!file) {
+        return "";
+    }
     const rawBytes = randomBytes(16);
     const fileName = rawBytes.toString("hex");
 
@@ -38,6 +41,9 @@ const uploadToPfpBucket = async (file) => {
 
 // upload file to S3
 const uploadToSoundsBucket = async (file) => {
+    if (!file) {
+        return "";
+    }
     const rawBytes = randomBytes(16);
     const fileName = rawBytes.toString("hex");
 
