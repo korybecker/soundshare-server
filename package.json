@@ -1,21 +1,22 @@
 {
-	"name": "server-template",
+	"name": "soundshare-server",
 	"version": "1.0.0",
 	"description": "express server template project",
 	"main": "app.js",
 	"scripts": {
-		"start": "nodemon bin/run | bunyan -o short"
+		"start": "nodemon bin/run | bunyan -o short",
+		"build": "npm install"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/korybecker/server-template.git"
+		"url": "git+https://github.com/korybecker/soundshare-server.git"
 	},
 	"author": "Kory Becker",
 	"license": "MIT",
 	"bugs": {
-		"url": "https://github.com/korybecker/server-template/issues"
+		"url": "https://github.com/korybecker/soundshare-server/issues"
 	},
-	"homepage": "https://github.com/korybecker/server-template#readme",
+	"homepage": "https://github.com/korybecker/soundshare-server#readme",
 	"dependencies": {
 		"aws-sdk": "^2.1253.0",
 		"bcrypt": "^5.1.0",
@@ -28,7 +29,6 @@
 		"jsonwebtoken": "^8.5.1",
 		"mongodb": "^4.11.0",
 		"mongoose": "^6.7.2",
-		"multer": "^1.4.5-lts.1",
 		"validator": "^13.7.0"
 	},
 	"devDependencies": {
