@@ -8,9 +8,11 @@ const routesV1 = require("./routes/v1");
 
 const UserService = require("./services/UserService");
 const SoundService = require("./services/SoundService");
+const LikeService = require("./services/LikeService");
 
 const userService = new UserService();
 const soundService = new SoundService();
+const likeService = new LikeService();
 
 module.exports = (config) => {
     const log = config.log();
@@ -29,7 +31,7 @@ module.exports = (config) => {
     app.use(cors());
 
     // use routes
-    app.use("/api/v1/", routesV1({ userService, soundService }));
+    app.use("/api/v1/", routesV1({ userService, soundService, likeService }));
 
     app.get("/", (req, res) => {
         return res.json({
