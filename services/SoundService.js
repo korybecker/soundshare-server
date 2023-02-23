@@ -1,5 +1,7 @@
 const Sound = require("../models/soundModel");
 const User = require("../models/userModel");
+const Like = require("../models/likeModel");
+
 const { uploadToSoundsBucket, deleteFromSoundsBucket } = require("../s3");
 
 class SoundService {
@@ -53,10 +55,35 @@ class SoundService {
         try {
             const { soundId } = req.params;
             const { title, description } = req.body;
-            const updatedSound = await Sound.findByIdAndUpdate(soundId, {
-                title,
-                description,
-            });
+
+            // find sound by id
+            const sound = await Sound.findById(soundId);
+
+            // check if sound exists
+            if (!sound) {
+                return res
+                    .status(404)
+                    .json({ error: { message: "Sound not found" } });
+            }
+
+            // check if sound is uploaded by the authorized user
+            if (sound.uploadedBy.toString() !== req.user._id.toString()) {
+                return res.status(403).json({
+                    error: {
+                        message: "You are not authorized to delete this sound",
+                    },
+                });
+            }
+
+            const updatedSound = await Sound.findByIdAndUpdate(
+                soundId,
+                {
+                    title,
+                    description,
+                },
+                { new: true }
+            );
+
             res.json(updatedSound);
         } catch (err) {
             return next(err);
@@ -66,9 +93,81 @@ class SoundService {
         try {
             const { soundId } = req.params;
             const { url } = req.body;
+
+            // find sound by id
+            const sound = await Sound.findById(soundId);
+
+            // check if sound exists
+            if (!sound) {
+                return res
+                    .status(404)
+                    .json({ error: { message: "Sound not found" } });
+            }
+
+            // check if sound is uploaded by the authorized user
+            if (sound.uploadedBy.toString() !== req.user._id.toString()) {
+                return res.status(403).json({
+                    error: {
+                        message: "You are not authorized to delete this sound",
+                    },
+                });
+            }
+
+            // delete sound from db and storage bucket
             await Sound.findByIdAndDelete(soundId);
             await deleteFromSoundsBucket(url);
+
             res.send("delete successful");
+        } catch (err) {
+            console.error(err);
+            return next(err);
+        }
+    }
+    async like(req, res, next) {
+        const { soundId } = req.params;
+
+        try {
+            const userId = req.user._id;
+            const sound = await Sound.findById(soundId);
+
+            // check if sound DNE
+            if (!sound) {
+                return res
+                    .status(404)
+                    .json({ error: { message: "Sound not found" } });
+            }
+
+            const like = await Like.create({ sound: soundId, user: userId });
+
+            sound.likes++;
+            await sound.save();
+
+            res.json(like);
+        } catch (err) {
+            console.error(err);
+            return next(err);
+        }
+    }
+    async unlike(req, res, next) {
+        const { soundId } = req.params;
+
+        try {
+            const userId = req.user._id;
+            const sound = await Sound.findById(soundId);
+
+            // check if sound DNE
+            if (!sound) {
+                return res
+                    .status(404)
+                    .json({ error: { message: "Sound not found" } });
+            }
+
+            const like = await Like.deleteOne({ sound: soundId, user: userId });
+
+            sound.likes--;
+            await sound.save();
+
+            res.json(like);
         } catch (err) {
             console.error(err);
             return next(err);
