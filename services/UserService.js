@@ -1,7 +1,6 @@
 const Sound = require("../models/soundModel");
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
 
 const { uploadToPfpBucket } = require("../s3");
 
