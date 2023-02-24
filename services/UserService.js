@@ -85,8 +85,10 @@ class UserService {
             delete user["createdAt"];
             delete user["updatedAt"];
 
-            const sounds = await Sound.find({ uploadedBy: user._id }).lean();
-            user["sounds"] = sounds;
+            // Replace _id with userId
+            user.userId = user._id.toString();
+            delete user["_id"];
+
             res.status(200).json(user);
         } catch (err) {
             return next(err);
