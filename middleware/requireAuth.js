@@ -13,6 +13,12 @@ const requireAuth = async (req, res, next) => {
 
     const token = authorization.split(" ")[1];
 
+    if (!token) {
+        return res
+            .status(401)
+            .json({ error: { message: "Authorization token required." } });
+    }
+
     // verify token has not been altered
     try {
         const { _id } = jwt.verify(token, process.env.JWT_SECRET);
