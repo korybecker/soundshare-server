@@ -46,6 +46,10 @@ class SoundService {
                 url,
                 uploadedBy,
             });
+
+            const user = await User.findById(uploadedBy);
+            await user.updateOne({ hasSounds: true });
+
             res.status(201).json(newSound);
         } catch (err) {
             return next(err);
@@ -70,7 +74,7 @@ class SoundService {
             if (sound.uploadedBy.toString() !== req.user._id.toString()) {
                 return res.status(403).json({
                     error: {
-                        message: "You are not authorized to delete this sound",
+                        message: "You are not authorized to update this sound",
                     },
                 });
             }
@@ -95,7 +99,7 @@ class SoundService {
             const { url } = req.body;
 
             // find sound by id
-            const sound = await Sound.findById(soundId);
+            const sound = await Sound.findById(soundId).populate("uploadedBy");
 
             // check if sound exists
             if (!sound) {
@@ -116,6 +120,14 @@ class SoundService {
             // delete sound from db and storage bucket
             await Sound.findByIdAndDelete(soundId);
             await deleteFromSoundsBucket(url);
+
+            const userSounds = await Sound.find({ user: sound.uploadedBy._id });
+            if (userSounds.length === 0) {
+                await User.updateOne(
+                    { _id: sound.uploadedBy._id },
+                    { hasSounds: false }
+                );
+            }
 
             res.send("delete successful");
         } catch (err) {
