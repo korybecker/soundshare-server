@@ -31,7 +31,7 @@ const uploadToPfpBucket = async (file) => {
 
     const uploadParams = {
         Bucket: pfpBucketName,
-        Body: file.data,
+        Body: file.buffer,
         Key: fileName,
     };
 
@@ -40,8 +40,8 @@ const uploadToPfpBucket = async (file) => {
 };
 
 // upload file to S3
-const uploadToSoundsBucket = async (file) => {
-    if (!file) {
+const uploadToSoundsBucket = async (updatedBuffer) => {
+    if (!updatedBuffer) {
         return "";
     }
     const rawBytes = randomBytes(16);
@@ -49,7 +49,7 @@ const uploadToSoundsBucket = async (file) => {
 
     const uploadParams = {
         Bucket: soundsBucketName,
-        Body: file.buffer,
+        Body: updatedBuffer,
         Key: fileName,
     };
 
