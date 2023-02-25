@@ -1,4 +1,3 @@
-const Sound = require("../models/soundModel");
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 
@@ -36,11 +35,8 @@ class UserService {
     }
     async signupUser(req, res, next) {
         try {
-            let file = null;
-            if (req.files && req.files.file) {
-                file = req.files.file;
-            }
             const { email, name, username, password } = req.body;
+            const file = req.file;
 
             let pfpUrl;
             if (file) {
