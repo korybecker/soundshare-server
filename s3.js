@@ -49,7 +49,7 @@ const uploadToSoundsBucket = async (file) => {
 
     const uploadParams = {
         Bucket: soundsBucketName,
-        Body: file.data,
+        Body: file.buffer,
         Key: fileName,
     };
 
