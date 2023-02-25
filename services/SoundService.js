@@ -43,7 +43,7 @@ class SoundService {
     }
     async addSound(req, res, next) {
         try {
-            const file = req.files.file;
+            const file = req.file;
             const { title, description, uploadedBy } = req.body;
 
             // upload file to s3, get url back
@@ -87,7 +87,6 @@ class SoundService {
                     },
                 });
             }
-
             const updatedSound = await Sound.findByIdAndUpdate(
                 soundId,
                 {
@@ -129,6 +128,9 @@ class SoundService {
             // delete sound from db and storage bucket
             await Sound.findByIdAndDelete(soundId);
             await deleteFromSoundsBucket(url);
+
+            // delete likes associated with sound
+            await Like.deleteMany({ sound: soundId });
 
             const userSounds = await Sound.find({ user: sound.uploadedBy._id });
             if (userSounds.length === 0) {
