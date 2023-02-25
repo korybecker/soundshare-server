@@ -1,6 +1,7 @@
 const Sound = require("../models/soundModel");
 const User = require("../models/userModel");
 const Like = require("../models/likeModel");
+const NodeID3 = require("node-id3");
 
 const { uploadToSoundsBucket, deleteFromSoundsBucket } = require("../s3");
 
@@ -46,8 +47,19 @@ class SoundService {
             const file = req.file;
             const { title, description, uploadedBy } = req.body;
 
+            // update title metadata on sound file
+            const tags = {
+                title,
+            };
+
+            // convert file to buffer
+            const buffer = Buffer.from(await file.buffer);
+
+            // set title property
+            const updatedBuffer = NodeID3.write(tags, buffer);
+
             // upload file to s3, get url back
-            const url = await uploadToSoundsBucket(file);
+            const url = await uploadToSoundsBucket(updatedBuffer);
             // add sound document including url to object in s3 bucket
             const newSound = await Sound.create({
                 title,
