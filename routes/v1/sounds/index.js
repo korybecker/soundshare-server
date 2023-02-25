@@ -7,6 +7,7 @@ module.exports = (soundService) => {
     router
         .get("/", soundService.getAllSounds)
         .get("/:soundId", soundService.getSound)
+        .get("/user/:userId", soundService.getSoundsForUser)
         .post("/:soundId/like", requireAuth, soundService.like)
         .delete("/:soundId/unlike", requireAuth, soundService.unlike)
         .post("/", requireAuth, soundService.addSound)
