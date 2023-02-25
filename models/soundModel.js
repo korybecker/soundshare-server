@@ -8,7 +8,7 @@ const soundSchema = new mongoose.Schema(
         url: { type: String, required: true },
         description: { type: String },
         uploadedBy: { type: String },
-        likes: { type: Number },
+        likes: { type: Number, default: 0 },
     },
     {
         timestamps: true,
