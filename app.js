@@ -1,5 +1,4 @@
 const express = require("express");
-const upload = require("express-fileupload");
 const app = express();
 
 const cors = require("cors");
@@ -25,7 +24,6 @@ module.exports = (config) => {
         });
     }
 
-    app.use(upload());
     app.use(express.json());
     app.use(express.urlencoded({ extended: false }));
     app.use(cors());
