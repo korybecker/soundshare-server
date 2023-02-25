@@ -23,6 +23,15 @@ class SoundService {
             return next(err);
         }
     }
+    async getSoundsForUser(req, res, next) {
+        const { userId } = req.params;
+        try {
+            const userSounds = await Sound.find({ uploadedBy: userId });
+            res.json(userSounds);
+        } catch (err) {
+            return next(err);
+        }
+    }
     async getSound(req, res, next) {
         try {
             const { soundId } = req.params;
