@@ -2,6 +2,9 @@ const Sound = require("../models/soundModel");
 const User = require("../models/userModel");
 const Like = require("../models/likeModel");
 const NodeID3 = require("node-id3");
+const { promisify } = require("util");
+const stream = require("stream");
+const pipeline = promisify(stream.pipeline);
 const { S3 } = require("aws-sdk");
 const soundsBucketName = process.env.S3_SOUND_BUCKET_NAME;
 const soundsRegion = process.env.S3_SOUND_BUCKET_REGION;
@@ -55,30 +58,27 @@ class SoundService {
     async addSound(req, res, next) {
         try {
             const file = req.file;
-            const { title, description, uploadedBy } = req.body;
+            const userId = req.user._id;
+            const { title, description } = req.body;
 
-            // update title metadata on sound file
-            const tags = {
-                title,
-            };
-
-            // convert file to buffer
-            const buffer = Buffer.from(await file.buffer);
-
-            // set title property
-            const updatedBuffer = NodeID3.write(tags, buffer);
+            // authorize user can upload
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(500).json({
+                    error: "User does not exist. Only authorized users can upload sounds.",
+                });
+            }
 
             // upload file to s3, get url back
-            const url = await uploadToSoundsBucket(updatedBuffer);
+            const url = await uploadToSoundsBucket(file.buffer);
             // add sound document including url to object in s3 bucket
             const newSound = await Sound.create({
                 title,
                 description,
                 url,
-                uploadedBy,
+                uploadedBy: userId,
             });
 
-            const user = await User.findById(uploadedBy);
             await user.updateOne({ hasSounds: true });
 
             res.status(201).json(newSound);
@@ -91,22 +91,31 @@ class SoundService {
             const { soundId } = req.params;
             const sound = await Sound.findById(soundId);
             if (!sound) {
-                return res.status(404).json({ error: "Sound not found" });
+                return res.status(404).json({ error: "Sound not found." });
             }
 
             const params = {
                 Bucket: soundsBucketName,
                 Key: sound.url.split(".com/")[1],
             };
-            const s3ReadStream = s3.getObject(params).createReadStream();
+            const s3Object = await s3.getObject(params).promise();
+            const audioBuffer = s3Object.Body;
+
+            const tags = {
+                title: sound.title,
+            };
+
+            const updatedBuffer = NodeID3.write(tags, audioBuffer);
 
             res.setHeader(
                 "Content-Disposition",
                 `attachment; filename="${sound.title}.mp3"`
             );
             res.setHeader("Content-Type", "audio/mpeg");
+            const readStream = new stream.PassThrough();
+            readStream.end(updatedBuffer);
 
-            s3ReadStream.pipe(res);
+            readStream.pipe(res);
         } catch (err) {
             return next(err);
         }
@@ -123,14 +132,14 @@ class SoundService {
             if (!sound) {
                 return res
                     .status(404)
-                    .json({ error: { message: "Sound not found" } });
+                    .json({ error: { message: "Sound not found." } });
             }
 
             // check if sound is uploaded by the authorized user
             if (sound.uploadedBy.toString() !== req.user._id.toString()) {
                 return res.status(403).json({
                     error: {
-                        message: "You are not authorized to update this sound",
+                        message: "You are not authorized to update this sound.",
                     },
                 });
             }
@@ -152,6 +161,7 @@ class SoundService {
         try {
             const { soundId } = req.params;
             const { url } = req.body;
+            const userId = req.user._id;
 
             // find sound by id
             const sound = await Sound.findById(soundId).populate("uploadedBy");
@@ -160,14 +170,14 @@ class SoundService {
             if (!sound) {
                 return res
                     .status(404)
-                    .json({ error: { message: "Sound not found" } });
+                    .json({ error: { message: "Sound not found." } });
             }
 
             // check if sound is uploaded by the authorized user
-            if (sound.uploadedBy.toString() !== req.user._id.toString()) {
+            if (sound.uploadedBy.toString() !== userId.toString()) {
                 return res.status(403).json({
                     error: {
-                        message: "You are not authorized to delete this sound",
+                        message: "You are not authorized to delete this sound.",
                     },
                 });
             }
@@ -179,12 +189,9 @@ class SoundService {
             // delete likes associated with sound
             await Like.deleteMany({ sound: soundId });
 
-            const userSounds = await Sound.find({ user: sound.uploadedBy._id });
+            const userSounds = await Sound.find({ user: userId });
             if (userSounds.length === 0) {
-                await User.updateOne(
-                    { _id: sound.uploadedBy._id },
-                    { hasSounds: false }
-                );
+                await User.updateOne({ _id: userId }, { hasSounds: false });
             }
 
             res.send("delete successful");
@@ -204,7 +211,7 @@ class SoundService {
             if (!sound) {
                 return res
                     .status(404)
-                    .json({ error: { message: "Sound not found" } });
+                    .json({ error: { message: "Sound not found." } });
             }
 
             const like = await Like.create({ sound: soundId, user: userId });
@@ -229,7 +236,7 @@ class SoundService {
             if (!sound) {
                 return res
                     .status(404)
-                    .json({ error: { message: "Sound not found" } });
+                    .json({ error: { message: "Sound not found." } });
             }
 
             const like = await Like.deleteOne({ sound: soundId, user: userId });
