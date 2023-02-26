@@ -4,7 +4,7 @@ const router = express.Router();
 const requireAuth = require("../../../middleware/requireAuth");
 
 module.exports = (likeService) => {
-    router.get("/:userId", requireAuth, likeService.getLikesForUser);
+    router.get("/", requireAuth, likeService.getLikesForUser);
 
     return router;
 };
