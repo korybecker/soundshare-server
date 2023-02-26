@@ -4,7 +4,7 @@ const Like = require("../models/likeModel");
 
 class LikeService {
     async getLikesForUser(req, res, next) {
-        const { userId } = req.params;
+        const userId = req.user._id;
         try {
             const data = await Like.find({ user: userId });
             const likes = [];
