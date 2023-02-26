@@ -15,7 +15,7 @@ module.exports = (soundService) => {
     router
         .get("/", soundService.getAllSounds)
         .get("/:soundId", soundService.getSound)
-        .get("/:soundId/download", soundService.downloadSound)
+        .get("/:soundId/download", requireAuth, soundService.downloadSound)
         .get("/user/:userId", soundService.getSoundsForUser)
         .post("/:soundId/like", requireAuth, soundService.like)
         .delete("/:soundId/unlike", requireAuth, soundService.unlike)
