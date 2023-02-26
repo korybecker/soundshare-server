@@ -2,6 +2,16 @@ const Sound = require("../models/soundModel");
 const User = require("../models/userModel");
 const Like = require("../models/likeModel");
 const NodeID3 = require("node-id3");
+const { S3 } = require("aws-sdk");
+const soundsBucketName = process.env.S3_SOUND_BUCKET_NAME;
+const soundsRegion = process.env.S3_SOUND_BUCKET_REGION;
+const accessKeyId = process.env.S3_ACCESS_KEY;
+const secretAccessKey = process.env.S3_SECRET_KEY;
+const s3 = new S3({
+    soundsRegion,
+    accessKeyId,
+    secretAccessKey,
+});
 
 const { uploadToSoundsBucket, deleteFromSoundsBucket } = require("../s3");
 
@@ -72,6 +82,31 @@ class SoundService {
             await user.updateOne({ hasSounds: true });
 
             res.status(201).json(newSound);
+        } catch (err) {
+            return next(err);
+        }
+    }
+    async downloadSound(req, res, next) {
+        try {
+            const { soundId } = req.params;
+            const sound = await Sound.findById(soundId);
+            if (!sound) {
+                return res.status(404).json({ error: "Sound not found" });
+            }
+
+            const params = {
+                Bucket: soundsBucketName,
+                Key: sound.url.split(".com/")[1],
+            };
+            const s3ReadStream = s3.getObject(params).createReadStream();
+
+            res.setHeader(
+                "Content-Disposition",
+                `attachment; filename="${sound.title}.mp3"`
+            );
+            res.setHeader("Content-Type", "audio/mpeg");
+
+            s3ReadStream.pipe(res);
         } catch (err) {
             return next(err);
         }
