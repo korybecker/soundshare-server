@@ -15,7 +15,7 @@ const server = http.createServer(app);
 
 connectDB();
 
-server.listen(process.env.PORT || 3000);
+server.listen(process.env.PORT || 8080);
 
 server.on('listening', () => {
 	log.info(
